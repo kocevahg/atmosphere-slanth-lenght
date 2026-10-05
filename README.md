@@ -173,11 +173,45 @@ p5 = 0.817285
 
 This parametrization accounts for the effect of atmospheric curvature on inclined atmospheric particle trajectories. 
 
-### Reference
+## Chirkin Parametrization
 
-D. Chirkin, **“Fluxes of Atmospheric Leptons at 600 GeV - 60 TeV”**, 2004.
+As a reference for the numerical calculation, the code also includes the five-parameter parametrization of the total atmospheric overburden from Chirkin [1]:
 
-[arXiv:hep-ph/0407078](https://arxiv.org/abs/hep-ph/0407078)
+$$
+X_{\mathrm{tot}}(\theta)=\frac{1\ \mathrm{mwe}}{p_1+p_2\cos^{p_3}(\theta)+p_4\left(1-\cos^2(\theta)\right)^{p_5}}.
+$$
+
+For the `Xtot` fit, Chirkin gives
+
+```text
+p1 = -0.017326
+p2 =  0.114236
+p3 =  1.15043
+p4 =  0.0200854
+p5 =  1.16714
+```
+
+The implementation is available as
+
+```python
+slant_depth_chirkin(theta_deg)
+```
+
+and returns the total atmospheric overburden in **g/cm²**.
+
+This parametrization provides an independent reference for the numerical curved-Earth integration:
+
+```python
+X_ray = slant_depth(theta)
+X_chirkin = slant_depth_chirkin(theta)
+```
+
+The two results can therefore be compared as a function of zenith angle to assess the agreement between the numerical atmospheric integration and the Chirkin parametrization.
+
+**Reference**
+
+[1] D. Chirkin, *Fluxes of Atmospheric Leptons at 600 GeV - 60 TeV*, [arXiv:hep-ph/0407078](https://arxiv.org/abs/hep-ph/0407078). 
+
 
 ## Units
 
