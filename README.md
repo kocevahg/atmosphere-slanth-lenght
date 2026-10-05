@@ -152,15 +152,7 @@ implements the effective zenith-angle parametrization introduced by Dmitry Chirk
 It is given by
 
 $$
-\cos\theta^*
-=
-\sqrt{
-\frac{
-x^2+p_1^2+p_2x^{p_3}+p_4x^{p_5}
-}{
-1+p_1^2+p_2+p_4
-}
-},
+\cos\theta^*=\sqrt{\frac{x^2+p_1^2+p_2x^{p_3}+p_4x^{p_5}}{1+p_1^2+p_2+p_4}},
 $$
 
 where
