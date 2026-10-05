@@ -207,5 +207,3 @@ This calculation assumes:
 * atmospheric boundary at 86 km
 * straight-line particle trajectories
 * no magnetic deflection or scattering
-
-For highly inclined trajectories, the curved-Earth calculation should generally be preferred over the flat-atmosphere approximation.
