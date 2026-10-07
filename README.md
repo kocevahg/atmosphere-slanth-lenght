@@ -69,55 +69,128 @@ temperature(10.0)   # K
 pressure(10.0)      # Pa
 ```
 
-## Slant Depth
+## Atmospheric Slant Depth
 
-The atmospheric slant depth is calculated as
+For a given zenith angle, the particle trajectory is represented by a **ray** originating at the detector and extending through the atmosphere. The variable `l` denotes the distance traveled along this ray, with
 
 $$
-X = \int \rho(h(l))\,dl,
+l=0
 $$
 
-where `ρ` is the atmospheric density and `l` is the distance along the particle trajectory.
+at the detector.
 
-The result is expressed in:
+The atmospheric density changes along the trajectory because the particle moves through regions of different altitude. The altitude is therefore written as a function of the distance along the ray,
+
+$$
+h=h(l),
+$$
+
+and the corresponding atmospheric density is
+
+$$
+\rho(l)=\rho\left(h(l)\right).
+$$
+
+The **atmospheric slant depth** encountered by the particle after traveling a distance $l$ is
+
+$$
+X(l)=\int_0^l \rho\left(h(l')\right)\,dl',
+$$
+
+The **total atmospheric slant depth** is obtained by integrating from the detector to the point where the ray reaches the upper boundary of the atmospheric model:
+
+$$
+X_{\mathrm{total}}=\int_0^{L_{\mathrm{max}}}\rho\left(h(l)\right)\,dl,
+$$
+
+where $L_{\mathrm{max}}$ is the distance along the ray to the upper atmospheric boundary.
+
+The slant depth is a **column density**, with units
 
 $$
 \mathrm{g/cm^2}.
 $$
 
-For curved-Earth geometry, the altitude along the ray is calculated from
+In the numerical calculation, the distance along the ray is stored in kilometres, while the atmospheric density is given in $\mathrm{g/cm^3}$. Therefore, the path length is converted from kilometres to centimetres using
 
 $$
-r(l)=
-\sqrt{
-R_{\rm obs}^2+l^2+
-2R_{\rm obs}l\cos\theta
-},
+1~\mathrm{km}=10^5~\mathrm{cm}.
+$$
+
+### Numerical Integration
+
+The integral is evaluated numerically using the **trapezoidal rule**. For two neighboring points along the ray, $l_i$ and $l_{i+1}$, the contribution to the slant depth is approximated by
+
+$$
+\Delta X_i\approx\frac{\rho_i+\rho_{i+1}}{2}\left(l_{i+1}-l_i\right),
+$$
+
+with the path length converted from kilometres to centimetres.
+
+The cumulative slant depth is then obtained by summing these contributions:
+
+$$
+X(l_i)\approx\sum_{j=0}^{i-1}\frac{\rho_j+\rho_{j+1}}{2}\left(l_{j+1}-l_j\right).
+$$
+
+Thus, the `Ray` class stores both the geometric trajectory and the atmospheric quantities evaluated along it:
+
+```python
+ray.l      # distance along particle trajectory [km]
+ray.h      # altitude along trajectory [km]
+ray.rho    # atmospheric density along trajectory [g/cm³]
+ray.x      # cumulative atmospheric slant depth [g/cm²]
+```
+
+The final value,
+
+```python
+ray.X_total
+```
+
+is the total atmospheric slant depth encountered by the particle between the detector and the upper atmospheric boundary.
+
+### Curved-Earth Geometry
+
+For curved-Earth geometry, the detector is located at
+
+$$
+R_{\mathrm{obs}}=R_{\mathrm{Earth}}+h_{\mathrm{obs}},
+$$
+
+where $h_{\mathrm{obs}}$ is the detector altitude.
+
+For a ray with zenith angle $\theta$, the distance from the Earth's center after traveling a distance $l$ along the trajectory is
+
+$$
+r(l)=\sqrt{R_{\mathrm{obs}}^2+l^2+2R_{\mathrm{obs}}l\cos\theta}.
+$$
+
+The altitude above the Earth's surface is therefore
+
+$$
+h(l)=r(l)-R_{\mathrm{Earth}}.
+$$
+
+The atmospheric density along the trajectory is then evaluated as
+
+$$
+\rho(l)=\rho\left(h(l)\right).
+$$
+
+The maximum integration distance $L_{\mathrm{max}}$ is determined by the point where the ray reaches the upper atmospheric boundary,
+
+$$
+R_{\mathrm{top}}=R_{\mathrm{Earth}}+H_{\mathrm{top}},
 $$
 
 with
 
 $$
-h(l)=r(l)-R_{\rm Earth}.
+H_{\mathrm{top}}=86~\mathrm{km}.
 $$
 
-This becomes important for large zenith angles, where the flat-atmosphere approximation breaks down.
-
-## Curved vs. Flat Geometry
-
-Curved geometry is the default:
-
-```python
-ray = Ray(85.0, curved=True)
-```
-
-For comparison, a flat atmosphere can be used with:
-
-```python
-ray = Ray(85.0, curved=False)
-```
-
-The curved calculation is especially important for trajectories close to the horizon.
+The curved-Earth treatment is particularly important for large zenith angles. For nearly horizontal trajectories, the Earth's curvature significantly changes the altitude of the particle along its path, making the flat-atmosphere approximation increasingly inaccurate.
 
 ## Layer-by-Layer Cross-Check
 
