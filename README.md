@@ -25,6 +25,13 @@ X = slant_depth(60.0)
 
 print(X, "g/cm²")
 ```
+The parameter `h_prod` specifies the altitude of the particle production point.
+
+For example:
+```python
+X = slant_depth(60.0, h_prod=15.0)
+```
+calculates the atmospheric slant depth between the detector and a production point at 15 km altitude.
 
 For more information about the trajectory, use the `Ray` class:
 
