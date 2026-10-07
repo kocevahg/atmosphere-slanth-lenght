@@ -42,52 +42,63 @@ def pressure(z):
 
 ############### GEOMETRY ##########################
 class Ray:
-    def __init__( self, theta_deg, h_obs=0.0, curved=True, n=40000 ):
+    def __init__(
+        self,
+        theta_deg,
+        h_obs=0.0,
+        h_prod=15.0,
+        curved=True,
+        n=40000
+    ):
         theta = np.radians(theta_deg)
         cos_theta = np.cos(theta)
 
-        #radius at detector
-        R_obs = R_EARTH+h_obs
+        # radius at detector
+        R_obs = R_EARTH + h_obs
 
-        #distance from detector to 86 km atmosphere bound
+        # radius at production point
+        R_prod = R_EARTH + h_prod
+
+
         if curved:
-            R_top = R_EARTH+H_TOP
 
-            Lmax = (-R_obs*cos_theta+np.sqrt((R_obs*cos_theta)**2+R_top**2-R_obs**2))
-
+            # check whether the ray reaches the requested altitude
+            discriminant = ((R_obs * cos_theta)**2+ R_prod**2 - R_obs**2)
+            Lmax = (-R_obs * cos_theta+ np.sqrt(discriminant))
         else:
-            Lmax = (H_TOP - h_obs) / max(cos_theta, 1e-12)
-
+            Lmax = (h_prod - h_obs) / max(cos_theta, 1e-12)
             Lmax = min(Lmax, 1e7)
 
         #integration grid
-        l = np.concatenate([[0.0], np.geomspace(1e-4, Lmax, n)])
+        l = np.concatenate([[0.0],np.geomspace(1e-4, Lmax, n)])
 
-        #height along the ray
         if curved:
-            r = np.sqrt(R_obs ** 2 + l ** 2 + 2.0 * R_obs * l * cos_theta)
-            h = ((l ** 2 + 2.0 * R_obs * l * cos_theta)/ (r + R_obs) + h_obs)
+            r = np.sqrt( R_obs**2 + l**2 + 2.0 * R_obs * l * cos_theta)
+            h = ((l**2 + 2.0 * R_obs * l * cos_theta) / (r + R_obs)+ h_obs )
+
         else:
             h = h_obs + l * cos_theta
 
-        # atmosphere density
         rho = density(h)
-
+        dl = np.diff(l)                 # [km]
+        
         #integrate rho*dl
-        dl = np.diff(l)         # [km] 1 km = 1e5 cm
         rho_avg = 0.5 * (rho[1:] + rho[:-1])   # [g/cm^3]
-        dx = ( rho_avg * dl * 1e5 ) # [g/cm^2]
+        dx = (rho_avg* dl* 1e5)         # [g/cm^2]
 
         #cumulative depth from detector
-        x = np.concatenate([[0.0], np.cumsum(dx)])
+        x = np.concatenate([ [0.0],np.cumsum(dx)])
 
         self.l = l
         self.h = h
         self.rho = rho
         self.x = x
+
         self.X_total = x[-1]
+
         self.theta = theta_deg
         self.h_obs = h_obs
+        self.h_prod = h_prod
 
     def l_of_x(self, x):
             #convert slant depth [g/cm^2] to distance along ray [km]
@@ -113,7 +124,7 @@ def cos_theta_star(theta_deg):
     p5 = 0.817285
     return np.sqrt( ( x ** 2 + p1 ** 2 + p2 * x ** p3 + p4 * x ** p5 ) / ( 1 + p1 ** 2 + p2 + p4 ) )
 
-############### CHIRKIN SLANT DEPTH ##########################
+############### CHIRKIN SLANT DEPTH FOR 86km ATMOSPHERE ##########################
 def slant_depth_chirkin(theta_deg):
     x = np.cos(np.radians(theta_deg))
 
@@ -127,9 +138,9 @@ def slant_depth_chirkin(theta_deg):
 
     return X_mwe * 100.0 # 1 mwe = 100 g/cm^2
 ############### LAYER BY LAYER METHOD ##########################
-def user_layer_method( theta_deg, zmax=86):
+def user_layer_method( theta_deg, zmax=15):
     # Atmospheric layers
-    z = np.arange(0.0, zmax + 1.0, 0.0001)  # [km]
+    z = np.arange(0.0, zmax + 1.0, 0.1)  # [km]
     rho = density(z)  # [g/cm^3]
 
     theta = np.radians(theta_deg)
@@ -164,7 +175,6 @@ def user_layer_method( theta_deg, zmax=86):
     return total
 
 ############### TEST CODE ##########################
-
 if __name__ == "__main__":
 # Atmospheric parameters at 10 km
     print("Atmosphere at 10 km:")
@@ -184,7 +194,7 @@ if __name__ == "__main__":
         print(f"theta = {theta:2d} deg : " f"X = {X_chirkin} g/cm^2")
 
     # Full ray
-    ray = Ray(60.0)
+    ray = Ray(90.0)
     print()
     print("Ray at 60 degrees:")
     print("X_total =", ray.X_total, "g/cm^2")
