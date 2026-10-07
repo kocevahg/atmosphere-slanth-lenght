@@ -94,13 +94,13 @@ $$
 The **atmospheric slant depth** encountered by the particle after traveling a distance $l$ is
 
 $$
-X(l)=\int_0^l \rho\left(h(l')\right)\,dl',
+X(l)=\int_0^l \rho\left(h(l')\right)dl'\,
 $$
 
 The **total atmospheric slant depth** is obtained by integrating from the detector to the point where the ray reaches the upper boundary of the atmospheric model:
 
 $$
-X_{\mathrm{total}}=\int_0^{L_{\mathrm{max}}}\rho\left(h(l)\right)\dl,
+X_{\mathrm{total}}=\int_0^{L_{\mathrm{max}}}\rho\left(h(l)\right)dl\,
 $$
 
 where $L_{\mathrm{max}}$ is the distance along the ray to the upper atmospheric boundary.
