@@ -13,45 +13,36 @@ Install the required packages with:
 ```bash
 pip install numpy ussa1976
 ```
+`matplotlib` is needed only for plotting.
 
-## Basic Usage
+## Repository files
 
-Calculate the total atmospheric slant depth for a particle arriving at a given zenith angle:
+- `physics_atm.py` — atmospheric properties, ray geometry, slant-depth integration, and Chirkin reference parametrizations.
+- `energy_losses.py` — muon momentum/kinetic-energy conversions, Groom-table interpolation, forward energy-loss propagation, and backward energy reconstruction.
+- `table_Groom.txt` — input stopping-power table required by `energy_losses.py`; place it beside the Python files. [2]
+
+## Basic Usage: Atmospheric Slant Depth
 
 ```python
-from atmosphere import slant_depth
+from physics_atm import slant_depth, Ray
 
 X = slant_depth(60.0)
-
 print(X, "g/cm²")
-```
-The parameter `h_prod` specifies the altitude of the particle production point.
 
-For example:
-```python
-X = slant_depth(60.0, h_prod=15.0)
-```
-calculates the atmospheric slant depth between the detector and a production point at 15 km altitude.
-
-For more information about the trajectory, use the `Ray` class:
-
-```python
-from atmosphere import Ray
-
-ray = Ray(60.0)
-
+# Detector at sea level, production point at 15 km altitude
+ray = Ray(60.0, h_prod=15.0)
 print("Total depth:", ray.X_total, "g/cm²")
 print("Path length:", ray.l[-1], "km")
 print("Top altitude:", ray.h[-1], "km")
 ```
 
-The main arrays are:
+The main `Ray` arrays are:
 
 ```python
-ray.l      # distance along ray [km]
-ray.h      # altitude [km]
-ray.rho    # density [g/cm³]
-ray.x      # cumulative slant depth [g/cm²]
+ray.l    # distance along ray [km]
+ray.h    # altitude along ray [km]
+ray.rho  # density [g/cm³]
+ray.x    # cumulative slant depth [g/cm²]
 ```
 
 ## Atmospheric Model
@@ -75,6 +66,51 @@ density(10.0)       # g/cm³
 temperature(10.0)   # K
 pressure(10.0)      # Pa
 ```
+
+## Muon Energy Losses
+
+The energy-loss calculation uses the Groom table, whose kinetic-energy column is in MeV and stopping-power column is in MeV cm²/g. The table must be available as `table_Groom.txt` in the same directory as `energy_losses.py`. [2]
+
+```python
+from energy_losses import loss_for_ray, energy_at_production
+
+T_prod = 10_000.0  # MeV = 10 GeV
+
+X, T_ground, delta_T = loss_for_ray(
+    theta_deg=0.0,
+    T0_MeV=T_prod,
+    h_prod=15.0,
+)
+
+print(f"Slant depth: {X:.2f} g/cm²")
+if T_ground == T_ground:  # NaN check
+    print(f"Ground kinetic energy: {T_ground / 1000:.4f} GeV")
+    print(f"Energy lost: {delta_T / 1000:.4f} GeV")
+
+    # Reverse the propagation to estimate the production energy
+    T_reconstructed = energy_at_production(
+        theta_deg=0.0,
+        T_ground_MeV=T_ground,
+        h_prod=15.0,
+    )
+    print(f"Reconstructed production energy: {T_reconstructed / 1000:.4f} GeV")
+else:
+    print("The particle did not traverse the full depth within the table range.")
+```
+
+### Interpolation and numerical propagation
+
+`dedx_groom(T)` uses **log-log interpolation** between positive table values. This is suitable for a table spanning many orders of magnitude in energy because it interpolates linearly in `log(T)` and `log(dE/dx)`, corresponding to a local power-law dependence between neighboring points.
+
+The forward propagation approximates
+
+\[
+\frac{dT}{dX}=-\frac{dE}{dX}(T)
+\]
+
+using fixed steps in slant depth. `energy_loss_dedx(T0_MeV, X, steps=20000)` returns `NaN` when the integration reaches or crosses the lower energy boundary of the table. This means the result is outside the supported table range; it should not automatically be interpreted as a precise physical stopping point.
+
+`energy_at_production(...)` integrates in the reverse direction, adding the energy lost along the path. Its result is only valid while the integration stays within the Groom table's energy range. The forward and backward functions use the same `Ray.X_total` for a consistent comparison.
 
 ## Atmospheric Slant Depth
 
@@ -291,6 +327,7 @@ The two results can therefore be compared as a function of zenith angle to asses
 **Reference**
 
 [1] D. Chirkin, *Fluxes of Atmospheric Leptons at 600 GeV - 60 TeV*, [arXiv:hep-ph/0407078](https://arxiv.org/abs/hep-ph/0407078). 
+[2] Groom, D. E., Mokhov, N. V., and Striganov, S. I. (2001). “Muon stopping power and range tables.” Atomic Data and Nuclear Data Tables, 78(2), 183–356. [doi.org/10.1006/adnd.2001.086a](https://doi.org/10.1006/adnd.2001.086a)
 
 
 ## Units
