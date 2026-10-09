@@ -327,6 +327,7 @@ The two results can therefore be compared as a function of zenith angle to asses
 **Reference**
 
 [1] D. Chirkin, *Fluxes of Atmospheric Leptons at 600 GeV - 60 TeV*, [arXiv:hep-ph/0407078](https://arxiv.org/abs/hep-ph/0407078). 
+
 [2] Groom, D. E., Mokhov, N. V., and Striganov, S. I. (2001). “Muon stopping power and range tables.” Atomic Data and Nuclear Data Tables, 78(2), 183–356. [PDG](https://pdg.web.cern.ch/pdg/2020/AtomicNuclearProperties/adndt.pdf)
 
 
