@@ -17,7 +17,7 @@ pip install numpy ussa1976
 
 ## Repository files
 
-- `physics_atm.py` — atmospheric properties, ray geometry, slant-depth integration, and Chirkin reference parametrizations.
+- `atmosophere_path_lenght_X.py` — atmospheric properties, ray geometry, slant-depth integration, and Chirkin reference parametrizations.
 - `energy_losses.py` — muon momentum/kinetic-energy conversions, Groom-table interpolation, forward energy-loss propagation, and backward energy reconstruction.
 - `table_Groom.txt` — input stopping-power table required by `energy_losses.py`; place it beside the Python files. [2]
 
